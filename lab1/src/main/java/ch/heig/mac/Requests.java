@@ -83,9 +83,18 @@ public class Requests {
         );
         return result.rowsAs(JsonObject.class);
     }
-    
+
+    // TODO: est-ce que ça vaut la peine d'indexer director_name ?
     public List<JsonObject> plentifulDirectors() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        QueryResult result = cluster.query(
+                "SELECT director_name,\n" +
+                        "       COUNT(m._id) count_film\n" +
+                        "FROM `mflix-sample`.`_default`.`movies` m\n" +
+                        "UNNEST directors AS director_name\n" +
+                        "GROUP BY director_name\n" +
+                        "HAVING COUNT(m._id) > 30;"
+        );
+        return result.rowsAs(JsonObject.class);
     }
     
     public List<JsonObject> confusingMovies() {
