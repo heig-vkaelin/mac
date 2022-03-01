@@ -57,7 +57,13 @@ public class Requests {
     }
 
     public List<String> greatReviewers() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        QueryResult result = cluster.query(
+                "SELECT DISTINCT RAW name\n" +
+                        "FROM `mflix-sample`.`_default`.`comments`\n" +
+                        "GROUP BY name\n" +
+                        "HAVING COUNT(_id) > 300;"
+        );
+        return result.rowsAs(String.class);
     }
 
     public List<JsonObject> bestMoviesOfActor(String actor) {
