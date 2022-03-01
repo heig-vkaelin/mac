@@ -25,11 +25,11 @@ public class Requests {
     public List<JsonObject> inconsistentRating() {
         QueryResult result = cluster.query(
                 "SELECT imdb.id imdb_id,\n" +
-                "imdb.rating imdb_rating,\n" +
-                "tomatoes.viewer.rating tomatoes_rating\n" +
-                "FROM `mflix-sample`.`_default`.`movies`\n" +
-                "WHERE tomatoes.viewer.rating != 0\n" +
-                "AND ABS(imdb.rating - tomatoes.viewer.rating) > 7;"
+                        "       imdb.rating imdb_rating,\n" +
+                        "       tomatoes.viewer.rating tomatoes_rating\n" +
+                        "FROM `mflix-sample`.`_default`.`movies`\n" +
+                        "WHERE tomatoes.viewer.rating != 0\n" +
+                        "    AND ABS(imdb.rating - tomatoes.viewer.rating) > 7;"
         );
         return result.rowsAs(JsonObject.class);
     }
@@ -45,7 +45,15 @@ public class Requests {
     }
 
     public List<JsonObject> topReviewers() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        QueryResult result = cluster.query(
+                "SELECT name,\n" +
+                        "       COUNT(_id) cnt\n" +
+                        "FROM `mflix-sample`.`_default`.`comments`\n" +
+                        "GROUP BY name\n" +
+                        "ORDER BY cnt DESC\n" +
+                        "LIMIT 10;"
+        );
+        return result.rowsAs(JsonObject.class);
     }
 
     public List<String> greatReviewers() {
