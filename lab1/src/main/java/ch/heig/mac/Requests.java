@@ -1,18 +1,20 @@
 package ch.heig.mac;
 
 import java.util.List;
+
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.json.JsonObject;
+import com.couchbase.client.java.query.QueryOptions;
 import com.couchbase.client.java.query.QueryResult;
 
 
 public class Requests {
     private final Cluster cluster;
-
+    
     public Requests(Cluster cluster) {
         this.cluster = cluster;
     }
-
+    
     public List<String> getCollectionNames() {
         QueryResult result = cluster.query(
                 "SELECT RAW r.name\n" +
@@ -21,7 +23,7 @@ public class Requests {
         );
         return result.rowsAs(String.class);
     }
-
+    
     public List<JsonObject> inconsistentRating() {
         QueryResult result = cluster.query(
                 "SELECT imdb.id imdb_id,\n" +
@@ -33,7 +35,7 @@ public class Requests {
         );
         return result.rowsAs(JsonObject.class);
     }
-
+    
     public List<JsonObject> hiddenGem() {
         QueryResult result = cluster.query(
                 "SELECT title\n" +
@@ -43,7 +45,7 @@ public class Requests {
         );
         return result.rowsAs(JsonObject.class);
     }
-
+    
     public List<JsonObject> topReviewers() {
         QueryResult result = cluster.query(
                 "SELECT name,\n" +
@@ -55,7 +57,7 @@ public class Requests {
         );
         return result.rowsAs(JsonObject.class);
     }
-
+    
     public List<String> greatReviewers() {
         QueryResult result = cluster.query(
                 "SELECT DISTINCT RAW name\n" +
@@ -65,35 +67,47 @@ public class Requests {
         );
         return result.rowsAs(String.class);
     }
-
+    
+    // TODO: check pk une fois j'ai rating = "" et pas un nombre
     public List<JsonObject> bestMoviesOfActor(String actor) {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        QueryResult result = cluster.query(
+                "SELECT imdb.id imdb_id,\n" +
+                        "       imdb.rating rating,\n" +
+                        "       `cast`\n" +
+                        "FROM `mflix-sample`.`_default`.`movies`\n" +
+                        "WHERE imdb.rating > 8\n" +
+                        "AND $actor in `cast`;",
+                QueryOptions
+                        .queryOptions()
+                        .parameters(JsonObject.create().put("actor", actor))
+        );
+        return result.rowsAs(JsonObject.class);
     }
-
+    
     public List<JsonObject> plentifulDirectors() {
         throw new UnsupportedOperationException("Not implemented, yet");
     }
-
+    
     public List<JsonObject> confusingMovies() {
         throw new UnsupportedOperationException("Not implemented, yet");
     }
-
+    
     public List<JsonObject> commentsOfDirector1(String director) {
         throw new UnsupportedOperationException("Not implemented, yet");
     }
-
+    
     public List<JsonObject> commentsOfDirector2(String director) {
         throw new UnsupportedOperationException("Not implemented, yet");
     }
-
+    
     // Returns the number of documents updated.
     public long removeEarlyProjection(String movieId) {
         throw new UnsupportedOperationException("Not implemented, yet");
     }
-
+    
     public List<JsonObject> nightMovies() {
         throw new UnsupportedOperationException("Not implemented, yet");
     }
-
-
+    
+    
 }
