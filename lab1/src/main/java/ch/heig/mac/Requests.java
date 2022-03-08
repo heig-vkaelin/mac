@@ -108,7 +108,20 @@ public class Requests {
     }
     
     public List<JsonObject> commentsOfDirector1(String director) {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        QueryResult result = cluster.query(
+                "SELECT c.movie_id,\n" +
+                        "       c.text\n" +
+                        "FROM `mflix-sample`.`_default`.`comments` c\n" +
+                        "WHERE c.movie_id IN (\n" +
+                        "    SELECT RAW _id\n" +
+                        "    FROM `mflix-sample`.`_default`.`movies` m\n" +
+                        "    WHERE $director WITHIN m.directors);",
+                QueryOptions
+                        .queryOptions()
+                        .parameters(JsonObject.create().put("director", director))
+        );
+
+        return result.rowsAs(JsonObject.class);
     }
     
     public List<JsonObject> commentsOfDirector2(String director) {
