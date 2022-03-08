@@ -76,7 +76,7 @@ public class Requests {
                         "FROM `mflix-sample`.`_default`.`movies`\n" +
                         "WHERE IS_NUMBER(imdb.rating)\n" +
                         "    AND imdb.rating > 8\n" +
-                        "    AND \"Ralph Fiennes\" IN `cast`",
+                        "    AND $actor IN `cast`",
                 QueryOptions
                         .queryOptions()
                         .parameters(JsonObject.create().put("actor", actor))
@@ -112,7 +112,17 @@ public class Requests {
     }
     
     public List<JsonObject> commentsOfDirector2(String director) {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        QueryResult result = cluster.query(
+                "SELECT m._id movie_id,\n" +
+                        "        c.text text\n" +
+                        "        FROM `mflix-sample`._default.movies m\n" +
+                        "        JOIN `mflix-sample`._default.comments c ON m._id = c.movie_id\n" +
+                        "        WHERE $director WITHIN m.directors;",
+                QueryOptions
+                        .queryOptions()
+                        .parameters(JsonObject.create().put("$director", director))
+        );
+        return result.rowsAs(JsonObject.class);
     }
     
     // Returns the number of documents updated.
