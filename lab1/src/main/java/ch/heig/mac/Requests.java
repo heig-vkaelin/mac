@@ -120,7 +120,7 @@ public class Requests {
                         .queryOptions()
                         .parameters(JsonObject.create().put("director", director))
         );
-
+        
         return result.rowsAs(JsonObject.class);
     }
     
@@ -140,7 +140,29 @@ public class Requests {
     
     // Returns the number of documents updated.
     public long removeEarlyProjection(String movieId) {
-        throw new UnsupportedOperationException("Not implemented, yet");
+//        UPDATE `mflix-sample`.`_default`.`theaters` t1
+//        SET schedule = (
+//                SELECT RAW ss
+//        FROM `mflix-sample`.`_default`.`theaters` t2
+//        UNNEST t2.schedule AS ss
+//        WHERE ss.movieId <> "573a13edf29313caabdd49ad"
+//        OR ss.hourBegin >= "18:00:00")
+//        WHERE t1._id = t2._id
+//        AND ss2.movieId WITHIN t1.schedule
+        
+        QueryResult result = cluster.query(
+                "UPDATE `mflix-sample`.`_default`.`theaters`\n" +
+                        "SET schedule = ARRAY s FOR s IN schedule WHEN s.moveId != movieId\n" +
+                        "    OR s.hourBegin >= \"18:00:00\" END\n" +
+                        "WHERE movieId WITHIN schedule;",
+                QueryOptions
+                        .queryOptions()
+                        .parameters(JsonObject.create().put("movieId", movieId))
+                        .metrics(true)
+        );
+        
+        return result.metaData().metrics().isPresent() ?
+                result.metaData().metrics().get().mutationCount() : 0;
     }
     
     public List<JsonObject> nightMovies() {
