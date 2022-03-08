@@ -68,22 +68,22 @@ public class Requests {
         return result.rowsAs(String.class);
     }
     
-    // TODO: check pk une fois j'ai rating = "" et pas un nombre
     public List<JsonObject> bestMoviesOfActor(String actor) {
         QueryResult result = cluster.query(
                 "SELECT imdb.id imdb_id,\n" +
                         "       imdb.rating rating,\n" +
                         "       `cast`\n" +
                         "FROM `mflix-sample`.`_default`.`movies`\n" +
-                        "WHERE imdb.rating > 8\n" +
-                        "AND $actor in `cast`;",
+                        "WHERE IS_NUMBER(imdb.rating)\n" +
+                        "    AND imdb.rating > 8\n" +
+                        "    AND \"Ralph Fiennes\" IN `cast`",
                 QueryOptions
                         .queryOptions()
                         .parameters(JsonObject.create().put("actor", actor))
         );
         return result.rowsAs(JsonObject.class);
     }
-
+    
     // TODO: est-ce que ça vaut la peine d'indexer director_name ?
     public List<JsonObject> plentifulDirectors() {
         QueryResult result = cluster.query(
