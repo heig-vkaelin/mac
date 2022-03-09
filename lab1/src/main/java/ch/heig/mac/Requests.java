@@ -133,7 +133,7 @@ public class Requests {
                         "        WHERE $director WITHIN m.directors;",
                 QueryOptions
                         .queryOptions()
-                        .parameters(JsonObject.create().put("$director", director))
+                        .parameters(JsonObject.create().put("director", director))
         );
         return result.rowsAs(JsonObject.class);
     }
@@ -154,7 +154,7 @@ public class Requests {
                 "UPDATE `mflix-sample`.`_default`.`theaters`\n" +
                         "SET schedule = ARRAY s FOR s IN schedule WHEN s.moveId != movieId\n" +
                         "    OR s.hourBegin >= \"18:00:00\" END\n" +
-                        "WHERE movieId WITHIN schedule;",
+                        "WHERE $movieId WITHIN schedule;",
                 QueryOptions
                         .queryOptions()
                         .parameters(JsonObject.create().put("movieId", movieId))
