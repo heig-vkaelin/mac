@@ -4,7 +4,6 @@ import com.couchbase.client.java.Cluster;
 
 public class Main {
 
-    // TODO: Configure credentials to allow connection to your local Couchbase instance
     public static Cluster openConnection() {
         var connectionString = "127.0.0.1";
         var username = "Administrator";

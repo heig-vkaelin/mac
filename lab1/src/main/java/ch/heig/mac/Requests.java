@@ -84,7 +84,6 @@ public class Requests {
         return result.rowsAs(JsonObject.class);
     }
     
-    // TODO: est-ce que ça vaut la peine d'indexer director_name ?
     public List<JsonObject> plentifulDirectors() {
         QueryResult result = cluster.query(
                 "SELECT director_name,\n" +
@@ -140,16 +139,6 @@ public class Requests {
     
     // Returns the number of documents updated.
     public long removeEarlyProjection(String movieId) {
-//        UPDATE `mflix-sample`.`_default`.`theaters` t1
-//        SET schedule = (
-//                SELECT RAW ss
-//        FROM `mflix-sample`.`_default`.`theaters` t2
-//        UNNEST t2.schedule AS ss
-//        WHERE ss.movieId <> "573a13edf29313caabdd49ad"
-//        OR ss.hourBegin >= "18:00:00")
-//        WHERE t1._id = t2._id
-//        AND ss2.movieId WITHIN t1.schedule
-        
         QueryResult result = cluster.query(
                 "UPDATE `mflix-sample`.`_default`.`theaters`\n" +
                         "SET schedule = ARRAY s FOR s IN schedule WHEN s.moveId != movieId\n" +
@@ -168,18 +157,16 @@ public class Requests {
     public List<JsonObject> nightMovies() {
         QueryResult result = cluster.query(
                 "SELECT _id movie_id,\n" +
-                "       title\n" +
-                "FROM `mflix-sample`.`_default`.`movies`\n" +
-                "WHERE _id IN (\n" +
-                "    SELECT RAW sched.movieId\n" +
-                "    FROM `mflix-sample`.`_default`.`theaters`\n" +
-                "    UNNEST schedule AS sched\n" +
-                "    GROUP BY sched.movieId\n" +
-                "    HAVING MIN(sched.hourBegin) >= \"18:00:00\");"
+                        "       title\n" +
+                        "FROM `mflix-sample`.`_default`.`movies`\n" +
+                        "WHERE _id IN (\n" +
+                        "    SELECT RAW sched.movieId\n" +
+                        "    FROM `mflix-sample`.`_default`.`theaters`\n" +
+                        "    UNNEST schedule AS sched\n" +
+                        "    GROUP BY sched.movieId\n" +
+                        "    HAVING MIN(sched.hourBegin) >= \"18:00:00\");"
         );
-
+        
         return result.rowsAs(JsonObject.class);
     }
-    
-    
 }
