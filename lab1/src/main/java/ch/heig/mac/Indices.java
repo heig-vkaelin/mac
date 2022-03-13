@@ -12,9 +12,6 @@ public class Indices {
     private final Cluster cluster;
     
     protected Map<String, List<String>> requiredIndices = Map.ofEntries(
-            // TODO: For each query, if needed, add the index creation requests
-            // Map.entry(<method name>, List.of("CREATE INDEX ...", "CREATE INDEX ..."))
-            
             Map.entry(
                     "commentsOfDirector2",
                     List.of("CREATE INDEX idx_comments_movie_id ON `mflix-sample`._default.comments(movie_id);")
