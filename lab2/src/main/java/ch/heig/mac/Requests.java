@@ -3,6 +3,7 @@ package ch.heig.mac;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
 
@@ -22,7 +23,7 @@ public class Requests {
             return result.list(t -> t.get("label").asString());
         }
     }
-
+    
     // TODO: query surement cheloue (les comparaison sont correctes ?) à demander
     public List<Record> possibleSpreaders() {
         var query =
@@ -32,7 +33,7 @@ public class Requests {
                         "WHERE v1.starttime > sick.confirmedtime AND v2.starttime > sick.confirmedtime AND " +
                         "atLeastOne > 0\n" +
                         "RETURN DISTINCT sick.name AS sickName";
-
+        
         try (var session = driver.session()) {
             var result = session.run(query);
             return result.list();
@@ -70,7 +71,18 @@ public class Requests {
     }
     
     public List<Record> healthyCompanionsOf(String name) {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var query =
+                "MATCH (p:Person{name:$name})-[*..3]-" +
+                        "(companions:Person{healthstatus:'Healthy'})\n" +
+                        "        RETURN DISTINCT companions.name AS healthyName;";
+        
+        try (var session = driver.session()) {
+            var result = session.run(
+                    query,
+                    Values.parameters("name", name)
+            );
+            return result.list();
+        }
     }
     
     public Record topSickSite() {
