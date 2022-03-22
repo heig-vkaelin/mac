@@ -69,7 +69,7 @@ public class Requests {
                         "with sick, count(distinct p) as nbPlaces\n" +
                         "where nbPlaces > 10\n" +
                         "RETURN sick.name, nbPlaces order by nbPlaces desc";
-
+        
         try (var session = driver.session()) {
             var result = session.run(query);
             return result.list();
@@ -90,7 +90,7 @@ public class Requests {
                         "    ) AS chevauchement,\n" +
                         "    duration({hours:2}) AS duration\n" +
                         "    WHERE datetime() + duration <= datetime() + chevauchement\n" +
-                        "RETURN DISTINCT sick.name AS sickName, COLLECT(DISTINCT healthy.name) AS peopleToInform;";
+                        "RETURN sick.name AS sickName, COLLECT(healthy.name) AS peopleToInform;";
         try (var session = driver.session()) {
             var result = session.run(query);
             return result.list();
@@ -98,7 +98,21 @@ public class Requests {
     }
     
     public List<Record> setHighRisk() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var query =
+                "MATCH (sick:Person{healthstatus:'Sick'})-[v1:VISITS]->(p:Place)<-[v2:VISITS]-(healthy:Person{healthstatus:'Healthy'})\n" +
+                        "WITH sick, healthy,\n" +
+                        "    duration.inSeconds(\n" +
+                        "        apoc.coll.max([v1.starttime, v2.starttime]),\n" +
+                        "        apoc.coll.min([v1.endtime, v2.endtime])\n" +
+                        "    ) AS chevauchement,\n" +
+                        "    duration({hours:2}) AS duration\n" +
+                        "    WHERE datetime() + duration <= datetime() + chevauchement\n" +
+                        "    SET healthy.risk = 'high'\n" +
+                        "RETURN DISTINCT healthy.name AS highRiskName;";
+        try (var session = driver.session()) {
+            var result = session.run(query);
+            return result.list();
+        }
     }
     
     public List<Record> healthyCompanionsOf(String name) {
