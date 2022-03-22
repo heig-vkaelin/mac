@@ -63,7 +63,20 @@ public class Requests {
     }
     
     public List<Record> peopleToInform() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var query =
+                "MATCH (sick:Person{healthstatus:'Sick'})-[v1:VISITS]->(p:Place)<-[v2:VISITS]-(healthy:Person{healthstatus:'Healthy'})\n" +
+                        "WITH sick, healthy,\n" +
+                        "    duration.inSeconds(\n" +
+                        "        apoc.coll.max([v1.starttime, v2.starttime]),\n" +
+                        "        apoc.coll.min([v1.endtime, v2.endtime])\n" +
+                        "    ) AS chevauchement,\n" +
+                        "    duration({hours:2}) AS duration\n" +
+                        "    WHERE datetime() + duration <= datetime() + chevauchement\n" +
+                        "RETURN DISTINCT sick.name AS sickName, COLLECT(DISTINCT healthy.name) AS peopleToInform;";
+        try (var session = driver.session()) {
+            var result = session.run(query);
+            return result.list();
+        }
     }
     
     public List<Record> setHighRisk() {
@@ -72,7 +85,7 @@ public class Requests {
     
     public List<Record> healthyCompanionsOf(String name) {
         var query =
-                "MATCH (p:Person{name:$name})-[*..3]-" +
+                "MATCH (p:Person{name:$name})-[:VISITS*6]-" +
                         "(companions:Person{healthstatus:'Healthy'})\n" +
                         "        RETURN DISTINCT companions.name AS healthyName;";
         
@@ -89,12 +102,12 @@ public class Requests {
         var query =
                 "MATCH (sick:Person{healthstatus:'Sick'})-[v:VISITS]->(p:Place)\n" +
                         "WHERE sick.confirmedtime < v.starttime\n" +
-                        "RETURN p.type AS placeType, SIZE(COLLECT(sick.id)) AS nbOfSickVisits\n" +
+                        "RETURN p.type AS placeType, COUNT(v) AS nbOfSickVisits\n" +
                         "ORDER BY nbOfSickVisits DESC\n" +
-                        "LIMIT 1;";
+                        "LIMIT 1";
         try (var session = driver.session()) {
             var result = session.run(query);
-            return result.list().get(0);
+            return result.peek();
         }
     }
     
