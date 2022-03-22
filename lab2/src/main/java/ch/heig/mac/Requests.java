@@ -25,6 +25,14 @@ public class Requests {
     }
     
     // TODO: query surement cheloue (les comparaison sont correctes ?) à demander
+    /*
+        MATCH(sick:Person{healthstatus:'Sick'})-[v1:VISITS]->(p:Place)<-[v2:VISITS]-(healthy:Person{healthstatus:'Healthy'})
+        WITH sick, v1, v2, Count(healthy) AS atLeastOne
+        WHERE v1.starttime >= sick.confirmedtime AND v2.starttime >= v1.starttime AND
+        atLeastOne > 0
+        RETURN DISTINCT sick.name AS sickName
+        Version avec 223 résultats mais les comparaisons semblent mieux
+     */
     public List<Record> possibleSpreaders() {
         var query =
                 "MATCH(sick:Person{healthstatus:'Sick'})-[v1:VISITS]->(p:Place)<-[v2:VISITS]-" +
@@ -55,7 +63,17 @@ public class Requests {
     }
     
     public List<Record> carelessPeople() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var query =
+                "MATCH(sick:Person{healthstatus:'Sick'})-[v:VISITS]->(p:Place)\n" +
+                        "WHERE sick.confirmedtime < v.starttime\n" +
+                        "with sick, count(distinct p) as nbPlaces\n" +
+                        "where nbPlaces > 10\n" +
+                        "RETURN sick.name, nbPlaces order by nbPlaces desc";
+
+        try (var session = driver.session()) {
+            var result = session.run(query);
+            return result.list();
+        }
     }
     
     public List<Record> sociallyCareful() {
