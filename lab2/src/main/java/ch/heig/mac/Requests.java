@@ -68,7 +68,7 @@ public class Requests {
                         "WHERE sick.confirmedtime < v.starttime\n" +
                         "with sick, count(distinct p) as nbPlaces\n" +
                         "where nbPlaces > 10\n" +
-                        "RETURN sick.name, nbPlaces order by nbPlaces desc";
+                        "RETURN sick.name AS sickName, nbPlaces order by nbPlaces desc";
         
         try (var session = driver.session()) {
             var result = session.run(query);
@@ -77,7 +77,17 @@ public class Requests {
     }
     
     public List<Record> sociallyCareful() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var query =
+                "Match (carefull:Person{healthstatus:'Sick'}) where not exists{\n" +
+                        "    (carefull)-[v:VISITS]->(p:Place{type:'Bar'}) where carefull.confirmedtime < v.starttime\n" +
+                        "}\n" +
+                        "\n" +
+                        "Return distinct carefull.name as sickName";
+
+        try (var session = driver.session()) {
+            var result = session.run(query);
+            return result.list();
+        }
     }
     
     public List<Record> peopleToInform() {
