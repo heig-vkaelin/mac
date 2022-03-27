@@ -23,23 +23,12 @@ public class Requests {
             return result.list(t -> t.get("label").asString());
         }
     }
-    
-    // TODO: query surement cheloue (les comparaison sont correctes ?) à demander
-    /*
-        MATCH(sick:Person{healthstatus:'Sick'})-[v1:VISITS]->(p:Place)<-[v2:VISITS]-(healthy:Person{healthstatus:'Healthy'})
-        WITH sick, v1, v2, Count(healthy) AS atLeastOne
-        WHERE v1.starttime >= sick.confirmedtime AND v2.starttime >= v1.starttime AND
-        atLeastOne > 0
-        RETURN DISTINCT sick.name AS sickName
-        Version avec 223 résultats mais les comparaisons semblent mieux
-     */
+
     public List<Record> possibleSpreaders() {
         var query =
-                "MATCH(sick:Person{healthstatus:'Sick'})-[v1:VISITS]->(p:Place)<-[v2:VISITS]-" +
-                        "(healthy:Person{healthstatus:'Healthy'})\n" +
-                        "WITH sick, v1, v2, Count(healthy) AS atLeastOne\n" +
-                        "WHERE v1.starttime > sick.confirmedtime AND v2.starttime > sick.confirmedtime AND " +
-                        "atLeastOne > 0\n" +
+                "MATCH(sick:Person{healthstatus:'Sick'})-[v1:VISITS]->(p:Place)<-[v2:VISITS]-(healthy:Person{healthstatus:'Healthy'})\n" +
+                        "WITH sick, v1, v2\n" +
+                        "WHERE v1.starttime > sick.confirmedtime AND v2.starttime > sick.confirmedtime\n" +
                         "RETURN DISTINCT sick.name AS sickName";
         
         try (var session = driver.session()) {
