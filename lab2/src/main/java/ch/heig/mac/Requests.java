@@ -23,7 +23,7 @@ public class Requests {
             return result.list(t -> t.get("label").asString());
         }
     }
-
+    
     public List<Record> possibleSpreaders() {
         var query =
                 "MATCH(sick:Person{healthstatus:'Sick'})-[v1:VISITS]->(p:Place)<-[v2:VISITS]-(healthy:Person{healthstatus:'Healthy'})\n" +
@@ -55,9 +55,9 @@ public class Requests {
         var query =
                 "MATCH(sick:Person{healthstatus:'Sick'})-[v:VISITS]->(p:Place)\n" +
                         "WHERE sick.confirmedtime < v.starttime\n" +
-                        "with sick, count(distinct p) as nbPlaces\n" +
-                        "where nbPlaces > 10\n" +
-                        "RETURN sick.name AS sickName, nbPlaces order by nbPlaces desc";
+                        "with sick, count(distinct p) AS nbPlaces\n" +
+                        "WHERE nbPlaces > 10\n" +
+                        "RETURN sick.name AS sickName, nbPlaces ORDER BY nbPlaces DESC";
         
         try (var session = driver.session()) {
             var result = session.run(query);
@@ -67,12 +67,12 @@ public class Requests {
     
     public List<Record> sociallyCareful() {
         var query =
-                "Match (carefull:Person{healthstatus:'Sick'}) where not exists{\n" +
-                        "    (carefull)-[v:VISITS]->(p:Place{type:'Bar'}) where carefull.confirmedtime < v.starttime\n" +
+                "MATCH (carefull:Person{healthstatus:'Sick'}) WHERE NOT exists{\n" +
+                        "    (carefull)-[v:VISITS]->(p:Place{type:'Bar'}) WHERE " +
+                        "carefull.confirmedtime < v.starttime\n" +
                         "}\n" +
-                        "\n" +
-                        "Return carefull.name as sickName";
-
+                        "RETURN carefull.name AS sickName";
+        
         try (var session = driver.session()) {
             var result = session.run(query);
             return result.list();
