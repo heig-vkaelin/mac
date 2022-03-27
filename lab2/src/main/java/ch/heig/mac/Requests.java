@@ -71,7 +71,7 @@ public class Requests {
                         "    (carefull)-[v:VISITS]->(p:Place{type:'Bar'}) where carefull.confirmedtime < v.starttime\n" +
                         "}\n" +
                         "\n" +
-                        "Return distinct carefull.name as sickName";
+                        "Return carefull.name as sickName";
 
         try (var session = driver.session()) {
             var result = session.run(query);
